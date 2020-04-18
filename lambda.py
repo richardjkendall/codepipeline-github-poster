@@ -5,7 +5,6 @@ import requests
 import base64
 
 ssm = boto3.client("ssm", region_name=os.environ["region"])
-gh_access_token = ""
 
 def authorisation(username, access_token):
     auth = base64.b64encode(f"{username}:{access_token}".encode("utf-8")).decode("utf-8")
@@ -22,7 +21,7 @@ def post_to_url(url, auth, payload):
   )
   return r.content
 
-def process_record(record):
+def process_record(record, access_token):
   record = json.loads(record)
   description = ""
   state = ""
@@ -48,19 +47,23 @@ def process_record(record):
     ),
     "context": "ci/build"
   }
+  print(payload)
   auth = authorisation(
     username = os.environ["gh_username"],
-    access_token = gh_access_token
+    access_token = access_token
   )
+  url = "https://api.github.com/repos/{owner}/{repo}/statuses/{sha}".format(
+    owner = record["github"]["owner"],
+    repo = record["github"]["repo"],
+    sha = record["github"]["sha"]
+  )
+  print(url)
   post_to_url(
-    url = "https://api.github.com/repos/{owner}/{repo}/statuses/{sha}".format(
-      owner = record["github"]["owner"],
-      repo = record["github"]["repo"],
-      sha = record["github"]["sha"]
-    ),
+    url = url,
     auth = auth,
     payload = payload
   )
+  print("posted to url")
 
 def entry(event, context):
   # get github access token
@@ -70,7 +73,8 @@ def entry(event, context):
   )
   gh_access_token = param["Parameter"]["Value"]
   for record in event["Records"]:
-    process_record(record["body"])
+    print(record["body"])
+    process_record(record["body"], gh_access_token)
 
 if __name__ == "__main__":
   record = """
