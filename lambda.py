@@ -4,6 +4,9 @@ import os
 import requests
 import base64
 
+ssm = boto3.client("ssm", region_name=os.environ["region"])
+gh_access_token = ""
+
 def authorisation(username, access_token):
     auth = base64.b64encode(f"{username}:{access_token}".encode("utf-8")).decode("utf-8")
     return f"Basic {auth}"
@@ -47,7 +50,7 @@ def process_record(record):
   }
   auth = authorisation(
     username = os.environ["gh_username"],
-    access_token = os.environ["gh_access_token"]
+    access_token = gh_access_token
   )
   post_to_url(
     url = "https://api.github.com/repos/{owner}/{repo}/statuses/{sha}".format(
@@ -60,6 +63,12 @@ def process_record(record):
   )
 
 def entry(event, context):
+  # get github access token
+  param = ssm.get_parameter(
+    Name=os.environ["gh_access_token"],
+    WithDecryption=True
+  )
+  gh_access_token = param["Parameter"]["Value"]
   for record in event["Records"]:
     process_record(record)
 
