@@ -70,7 +70,7 @@ def entry(event, context):
   )
   gh_access_token = param["Parameter"]["Value"]
   for record in event["Records"]:
-    process_record(record)
+    process_record(record["body"])
 
 if __name__ == "__main__":
   record = """
