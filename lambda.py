@@ -75,9 +75,3 @@ def entry(event, context):
   for record in event["Records"]:
     print(record["body"])
     process_record(record["body"], gh_access_token)
-
-if __name__ == "__main__":
-  record = """
-{"pipeline_name": "basic-cicd-pipeline-www-rjk-com-develop-rjk-ecs-dev-www-rjk-com-dev", "exec_id": "ed501676-0655-4165-9ae7-7f9b0914380a", "state": "STARTED", "github": {"owner": "richardjkendall", "repo": "www-rjk-com", "branch": "develop", "sha": "b006f33208492110e3fd0ca82d9691d9c4319740"}}
-  """
-  process_record(record)
